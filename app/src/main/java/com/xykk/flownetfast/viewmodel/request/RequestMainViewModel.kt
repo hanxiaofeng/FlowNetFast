@@ -15,7 +15,7 @@ class RequestMainViewModel: BaseViewModel() {
     var websiteResult : MutableLiveData<ResultState<UsuallyWebSites>> = MutableLiveData()
 
     fun postWebSiteRequest(){
-        request({ apiService.website()},websiteResult)
+        request({ apiService.website()},websiteResult,true)
     }
 
 }

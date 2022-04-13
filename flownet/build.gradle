@@ -38,6 +38,7 @@ android {
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'androidx.appcompat:appcompat:1.4.1'
+    implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
     //kotlin
     implementation"org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.6.10"
     implementation 'androidx.core:core-ktx:1.6.0'
@@ -60,4 +61,6 @@ dependencies {
     api 'com.github.franmontiel:PersistentCookieJar:v1.0.1'
     //动态替换BaseUrl库 使用可参考 https://github.com/JessYanCoding/RetrofitUrlManager
     api 'com.github.JessYanCoding:RetrofitUrlManager:v1.4.0'
+    api 'com.github.ybq:Android-SpinKit:1.4.0'
+    api 'com.blankj:utilcodex:1.31.0'
 }

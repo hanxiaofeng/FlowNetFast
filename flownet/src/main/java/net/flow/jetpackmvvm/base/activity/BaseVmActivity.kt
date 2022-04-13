@@ -20,32 +20,28 @@ abstract class BaseVmActivity<VM : BaseViewModel> : AppCompatActivity() {
      */
     private var isUserDb = false
 
+    private var isFullScreen = false
+
     lateinit var mViewModel: VM
 
     abstract fun layoutId(): Int
 
+    /**
+     *@description onCreate super之前相关代码放在此方法内处理
+     *@user wangkeke
+     *@time 2022/4/13 1:55 下午
+     */
+    abstract fun onCreateBefore()
+
     abstract fun initView(savedInstanceState: Bundle?)
 
-    abstract fun showLoading(message: String = "请求网络中...")
+    abstract fun showLoading(custom: Boolean = false, message: String = "加载中···")
 
-    abstract fun dismissLoading()
+    abstract fun dismissLoading(custom: Boolean = false)
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        onCreateBefore()
         super.onCreate(savedInstanceState)
-
-        var uiFlags: Int = (View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                or View.SYSTEM_UI_FLAG_FULLSCREEN)
-        uiFlags = uiFlags or 0x00001000
-        window.decorView.systemUiVisibility = uiFlags
-        val window = window
-        val params = window.attributes
-        params.systemUiVisibility =
-            View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or View.SYSTEM_UI_FLAG_FULLSCREEN or View.SYSTEM_UI_FLAG_IMMERSIVE
-        window.attributes = params
-
         if (!isUserDb) {
             setContentView(layoutId())
         } else {
@@ -95,7 +91,7 @@ abstract class BaseVmActivity<VM : BaseViewModel> : AppCompatActivity() {
     private fun registerUiChange() {
         //显示弹窗
         mViewModel.loadingChange.showDialog.observe(this, Observer {
-            showLoading(it)
+            showLoading(message = it)
         })
         //关闭弹窗
         mViewModel.loadingChange.dismissDialog.observe(this, Observer {
@@ -111,7 +107,7 @@ abstract class BaseVmActivity<VM : BaseViewModel> : AppCompatActivity() {
         viewModels.forEach {viewModel ->
             //显示弹窗
             viewModel.loadingChange.showDialog.observe(this, Observer {
-                showLoading(it)
+                showLoading(message = it)
             })
             //关闭弹窗
             viewModel.loadingChange.dismissDialog.observe(this, Observer {
@@ -122,6 +118,14 @@ abstract class BaseVmActivity<VM : BaseViewModel> : AppCompatActivity() {
 
     fun userDataBinding(isUserDb: Boolean) {
         this.isUserDb = isUserDb
+    }
+
+    fun setFullScreen(isFullScreen: Boolean) {
+        this.isFullScreen = isFullScreen
+    }
+
+    fun isFullScreen():Boolean{
+        return isFullScreen
     }
 
     /**

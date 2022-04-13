@@ -5,6 +5,8 @@ import android.view.View
 import androidx.databinding.DataBindingUtil
 import androidx.databinding.ViewDataBinding
 import net.flow.jetpackmvvm.base.viewmodel.BaseViewModel
+import net.flow.jetpackmvvm.util.dismissLoadingExt
+import net.flow.jetpackmvvm.util.showLoadingExt
 
 /**
  * 描述　: 包含ViewModel 和Databind ViewModelActivity基类，把ViewModel 和Databind注入进来了
@@ -16,21 +18,19 @@ abstract class BaseVmDbActivity<VM : BaseViewModel, DB : ViewDataBinding> : Base
 
     override fun onCreate(savedInstanceState: Bundle?) {
         userDataBinding(true)
-
-        var uiFlags: Int = (View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                or View.SYSTEM_UI_FLAG_FULLSCREEN)
-        uiFlags = uiFlags or 0x00001000
-        window.decorView.systemUiVisibility = uiFlags
-        val window = window
-        val params = window.attributes
-        params.systemUiVisibility =
-            View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or View.SYSTEM_UI_FLAG_FULLSCREEN or View.SYSTEM_UI_FLAG_IMMERSIVE
-        window.attributes = params
-
         super.onCreate(savedInstanceState)
+    }
+
+    override fun showLoading(custom: Boolean, message: String) {
+        if(!custom){
+            showLoadingExt()
+        }
+    }
+
+    override fun dismissLoading(custom: Boolean) {
+        if(!custom){
+            dismissLoadingExt()
+        }
     }
 
     /**

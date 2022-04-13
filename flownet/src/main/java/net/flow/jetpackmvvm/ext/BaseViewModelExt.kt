@@ -13,12 +13,11 @@ import net.flow.jetpackmvvm.network.ExceptionHandle
 import net.flow.jetpackmvvm.state.ResultState
 import net.flow.jetpackmvvm.state.paresException
 import net.flow.jetpackmvvm.state.paresResult
+import net.flow.jetpackmvvm.util.dismissLoadingExt
+import net.flow.jetpackmvvm.util.showLoadingExt
 
 /**
  * 描述　:BaseViewModel请求协程封装
- */
-
-/**
  * 显示页面状态，这里有个技巧，成功回调在第一个，其后两个带默认值的回调可省
  * @param resultState 接口返回值
  * @param onLoading 加载中
@@ -34,7 +33,7 @@ fun <T> BaseVmActivity<*>.parseState(
 ) {
     when (resultState) {
         is ResultState.Loading -> {
-            showLoading(resultState.loadingMessage)
+            showLoading(message = resultState.loadingMessage)
             onLoading?.run { this }
         }
         is ResultState.Success -> {
@@ -45,6 +44,7 @@ fun <T> BaseVmActivity<*>.parseState(
             dismissLoading()
             onError?.run { this(resultState.error) }
         }
+        else -> {}
     }
 }
 
@@ -59,7 +59,7 @@ fun <T> BaseVmActivity<*>.parseStateCanNull(
 ) {
     when (resultState) {
         is ResultState.Loading -> {
-            showLoading(resultState.loadingMessage)
+            showLoading(message = resultState.loadingMessage)
             onLoading?.run { this }
         }
         is ResultState.Success -> {
@@ -70,6 +70,7 @@ fun <T> BaseVmActivity<*>.parseStateCanNull(
             dismissLoading()
             onError?.run { this(resultState.error) }
         }
+        else -> {}
     }
 }
 
@@ -86,13 +87,13 @@ fun <T> BaseVmFragment<*>.parseState(
     resultState: ResultState<T>,
     onSuccess: (T) -> Unit,
     onError: ((AppException) -> Unit)? = null,
-    onLoading: ((message:String) -> Unit)? = null
+    onLoading: ((message: String) -> Unit)? = null
 ) {
     when (resultState) {
         is ResultState.Loading -> {
-            if(onLoading==null){
-                showLoading(resultState.loadingMessage)
-            }else{
+            if (onLoading == null) {
+                showLoading(message = resultState.loadingMessage)
+            } else {
                 onLoading.invoke(resultState.loadingMessage)
             }
         }
@@ -109,6 +110,52 @@ fun <T> BaseVmFragment<*>.parseState(
 
 
 /**
+ * 全局的request，不依赖activity，请在非ui页面特殊情况下使用
+ * @param block 请求体方法
+ * @param success 请求成功的回调
+ * @param error 请求失败的回调
+ */
+fun <T> requestGlobal(
+    block: suspend () -> BaseResponse<T>,
+    success: (T) -> Unit,
+    error: (AppException) -> Unit = {},
+    showLoading: Boolean = false
+): Job {
+    return GlobalScope.launch {
+        runCatching {
+            withContext(Dispatchers.Main){
+                if(showLoading){
+                    showLoadingExt()
+                }
+            }
+            block()
+        }.onSuccess {
+            if(showLoading){
+                dismissLoadingExt()
+            }
+            runCatching{
+                //切换到主线程，校验请求结果码是否正确，不正确会抛出异常走下面的onFailure
+                withContext(Dispatchers.Main){
+                    executeResponse(it) { t ->
+                        success(t)
+                    }
+                }
+            }.onFailure { e ->
+                e.printStackTrace()
+                error(ExceptionHandle.handleException(e))
+            }
+        }.onFailure {
+            if(showLoading){
+                dismissLoadingExt()
+            }
+            it.printStackTrace()
+            //失败回调
+            error(ExceptionHandle.handleException(it))
+        }
+    }
+}
+
+/**
  * net request 不校验请求结果数据是否是成功
  * @param block 请求体方法
  * @param resultState 请求回调的ResultState数据
@@ -119,17 +166,18 @@ fun <T> BaseViewModel.request(
     block: suspend () -> BaseResponse<T>,
     resultState: MutableLiveData<ResultState<T>>,
     isShowDialog: Boolean = false,
-    loadingMessage: String = "请求网络中..."
+    loadingMessage: String = "加载中···"
 ): Job {
     return viewModelScope.launch {
         runCatching {
-            if (isShowDialog) resultState.value = ResultState.onAppLoading(loadingMessage)
+            if (isShowDialog) loadingChange.showDialog.postValue(loadingMessage)
             //请求体
-
             block()
         }.onSuccess {
+            if (isShowDialog) loadingChange.dismissDialog.postValue(false)
             resultState.paresResult(it)
         }.onFailure {
+            if (isShowDialog) loadingChange.dismissDialog.postValue(false)
             it.message?.loge()
             resultState.paresException(it)
         }
@@ -147,16 +195,18 @@ fun <T> BaseViewModel.requestNoCheck(
     block: suspend () -> T,
     resultState: MutableLiveData<ResultState<T>>,
     isShowDialog: Boolean = false,
-    loadingMessage: String = "请求网络中..."
+    loadingMessage: String = "加载中···"
 ): Job {
     return viewModelScope.launch {
         runCatching {
-            if (isShowDialog) resultState.value = ResultState.onAppLoading(loadingMessage)
+            if (isShowDialog) loadingChange.showDialog.postValue(loadingMessage)
             //请求体
             block()
         }.onSuccess {
+            if (isShowDialog) loadingChange.dismissDialog.postValue(false)
             resultState.paresResult(it)
         }.onFailure {
+            if (isShowDialog) loadingChange.dismissDialog.postValue(false)
             it.message?.loge()
             resultState.paresException(it)
         }
@@ -176,7 +226,7 @@ fun <T> BaseViewModel.request(
     success: (T) -> Unit,
     error: (AppException) -> Unit = {},
     isShowDialog: Boolean = false,
-    loadingMessage: String = "请求网络中..."
+    loadingMessage: String = "加载中···"
 ): Job {
     //如果需要弹窗 通知Activity/fragment弹窗
     return viewModelScope.launch {
@@ -189,7 +239,8 @@ fun <T> BaseViewModel.request(
             loadingChange.dismissDialog.postValue(false)
             runCatching {
                 //校验请求结果码是否正确，不正确会抛出异常走下面的onFailure
-                executeResponse(it) { t -> success(t)
+                executeResponse(it) { t ->
+                    success(t)
                 }
             }.onFailure { e ->
                 //打印错误消息
@@ -221,7 +272,7 @@ fun <T> BaseViewModel.requestNoCheck(
     success: (T) -> Unit,
     error: (AppException) -> Unit = {},
     isShowDialog: Boolean = false,
-    loadingMessage: String = "请求网络中..."
+    loadingMessage: String = "加载中···"
 ): Job {
     //如果需要弹窗 通知Activity/fragment弹窗
     if (isShowDialog) loadingChange.showDialog.postValue(loadingMessage)

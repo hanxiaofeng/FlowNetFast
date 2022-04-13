@@ -3,6 +3,7 @@ package net.flow.jetpackmvvm.base.fragment
 import android.content.Context
 import android.os.Bundle
 import android.os.Handler
+import android.os.Looper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -22,7 +23,7 @@ import net.flow.jetpackmvvm.network.manager.NetworkStateManager
 
 abstract class BaseVmFragment<VM : BaseViewModel> : Fragment() {
 
-    private val handler = Handler()
+    private val handler = Handler(Looper.getMainLooper()!!)
 
     //是否第一次加载
     private var isFirst: Boolean = true
@@ -119,16 +120,16 @@ abstract class BaseVmFragment<VM : BaseViewModel> : Fragment() {
      */
     open fun initData() {}
 
-    abstract fun showLoading(message: String = "请求网络中...")
+    abstract fun showLoading(custom: Boolean = false, message: String = "请求网络中...")
 
-    abstract fun dismissLoading()
+    abstract fun dismissLoading(custom: Boolean = false)
 
     /**
      * 注册 UI 事件
      */
     private fun registorDefUIChange() {
         mViewModel.loadingChange.showDialog.observe(this, Observer {
-            showLoading(it)
+            showLoading(message = it)
         })
         mViewModel.loadingChange.dismissDialog.observe(this, Observer {
             dismissLoading()
@@ -143,7 +144,7 @@ abstract class BaseVmFragment<VM : BaseViewModel> : Fragment() {
         viewModels.forEach { viewModel ->
             //显示弹窗
             viewModel.loadingChange.showDialog.observe(this, Observer {
-                showLoading(it)
+                showLoading(message = it)
             })
             //关闭弹窗
             viewModel.loadingChange.dismissDialog.observe(this, Observer {

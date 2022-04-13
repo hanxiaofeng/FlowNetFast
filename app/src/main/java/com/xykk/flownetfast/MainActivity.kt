@@ -1,25 +1,31 @@
 package com.xykk.flownetfast
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.viewModels
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.lifecycleScope
 import com.xykk.flownetfast.base.BaseActivity
 import com.xykk.flownetfast.databinding.ActivityMainBinding
+import com.xykk.flownetfast.model.UsuallyWebSites
+import com.xykk.flownetfast.network.apiService
 import com.xykk.flownetfast.viewmodel.request.RequestMainViewModel
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.launch
+import net.flow.jetpackmvvm.ext.request
+import net.flow.jetpackmvvm.ext.requestGlobal
 import net.flow.jetpackmvvm.ext.util.loge
+import net.flow.jetpackmvvm.state.ResultState
 
 /**
  *@description 网络请求测试
  *@author wangkeke
  *@date 2022/4/12 4:20 下午
  */
-class MainActivity : BaseActivity<RequestMainViewModel,ActivityMainBinding>() {
+class MainActivity : BaseActivity<RequestMainViewModel, ActivityMainBinding>(),
+    CoroutineScope by MainScope() {
 
     private val requestMainViewModel: RequestMainViewModel by viewModels()
 
@@ -28,9 +34,10 @@ class MainActivity : BaseActivity<RequestMainViewModel,ActivityMainBinding>() {
     }
 
     override fun initView(savedInstanceState: Bundle?) {
+
     }
 
-    private fun testSharedFlow(){
+    private fun testSharedFlow() {
         val sharedFlow = MutableSharedFlow<String>()
 
         lifecycleScope.launch {
@@ -85,17 +92,17 @@ class MainActivity : BaseActivity<RequestMainViewModel,ActivityMainBinding>() {
 
     override fun createObserver() {
         requestMainViewModel.websiteResult.observe(this) {
-            dismissLoading()
-            it.toString().loge()
             mDatabind.tvData.text = it.toString()
         }
     }
 
     override fun onClick() {
         mDatabind.btnPostNet.setOnClickListener {
-            showLoading("请求数据中~")
-            requestMainViewModel.postWebSiteRequest()
-//            testSharedFlow()
+//            requestMainViewModel.postWebSiteRequest()
+            //测试全局请求
+            requestGlobal({ apiService.website()},{
+                mDatabind.tvData.text = it.toString()
+            }, showLoading = true)
         }
     }
 

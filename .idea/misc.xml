@@ -4,6 +4,9 @@
     <option name="filePathToZoomLevelMap">
       <map>
         <entry key="app/src/main/res/layout/activity_main.xml" value="0.25" />
+        <entry key="flownet/src/main/res/drawable/shape_white_bg.xml" value="0.2296875" />
+        <entry key="flownet/src/main/res/drawable/style_half_transparent.xml" value="0.2296875" />
+        <entry key="flownet/src/main/res/layout/loading_view.xml" value="0.13722826086956522" />
       </map>
     </option>
   </component>

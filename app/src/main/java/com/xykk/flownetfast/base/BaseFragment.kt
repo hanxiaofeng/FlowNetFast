@@ -33,14 +33,16 @@ abstract class BaseFragment<VM : BaseViewModel,DB: ViewDataBinding> : BaseVmDbFr
     /**
      * 打开等待框 在这里实现你的等待框展示
      */
-    override fun showLoading(message: String) {
-
+    override fun showLoading(custom: Boolean, message: String) {
+        super.showLoading(custom, message)
+        //注释掉super.showLoading,在这里实现你的等待框展示，否则使用默认提供样式
     }
 
     /**
      * 关闭等待框 在这里实现你的等待框关闭
      */
-    override fun dismissLoading() {
-
+    override fun dismissLoading(custom: Boolean) {
+        super.dismissLoading(custom)
+        //注释掉super.dismissLoading,在这里实现你的等待框关闭，否则使用默认提供样式
     }
 }

@@ -7,6 +7,8 @@ import android.view.ViewGroup
 import androidx.databinding.DataBindingUtil
 import androidx.databinding.ViewDataBinding
 import net.flow.jetpackmvvm.base.viewmodel.BaseViewModel
+import net.flow.jetpackmvvm.util.dismissLoadingExt
+import net.flow.jetpackmvvm.util.showLoadingExt
 
 /**
  * 描述　: ViewModelFragment基类，自动把ViewModel注入Fragment和Databind注入进来了
@@ -16,6 +18,18 @@ abstract class BaseVmDbFragment<VM : BaseViewModel, DB : ViewDataBinding> : Base
 
     //该类绑定的ViewDataBinding
     lateinit var mDatabind: DB
+
+    override fun showLoading(custom: Boolean, message: String) {
+        if(!custom){
+            showLoadingExt()
+        }
+    }
+
+    override fun dismissLoading(custom: Boolean) {
+        if(!custom){
+            dismissLoadingExt()
+        }
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,

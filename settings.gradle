@@ -9,4 +9,3 @@ dependencyResolutionManagement {
 rootProject.name = "FlowNetFast"
 include ':app'
 include ':flownet'
-include ':android-base-library'
