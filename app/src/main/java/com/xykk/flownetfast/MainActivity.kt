@@ -98,11 +98,12 @@ class MainActivity : BaseActivity<RequestMainViewModel, ActivityMainBinding>(),
 
     override fun onClick() {
         mDatabind.btnPostNet.setOnClickListener {
-//            requestMainViewModel.postWebSiteRequest()
+            //测试普通请求
+            requestMainViewModel.postWebSiteRequest()
             //测试全局请求
-            requestGlobal({ apiService.website()},{
-                mDatabind.tvData.text = it.toString()
-            }, showLoading = true)
+//            requestGlobal({ apiService.website()},{
+//                mDatabind.tvData.text = it.toString()
+//            }, showLoading = true)
         }
     }
 
