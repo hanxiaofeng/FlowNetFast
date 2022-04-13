@@ -4,7 +4,7 @@ import android.view.View
 import androidx.navigation.Navigator
 import androidx.navigation.fragment.FragmentNavigator
 import androidx.navigation.fragment.NavHostFragment
-import me.flow.jetpackmvvm.R
+import net.flow.jetpackmvvm.R
 
 
 /**

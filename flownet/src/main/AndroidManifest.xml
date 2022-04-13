@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="me.flow.jetpackmvvm">
+    package="net.flow.jetpackmvvm">
 
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <application>

@@ -23,7 +23,7 @@ object LogUtils {
         )
     }
 
-    fun warnInfo(tag: String?, msg: String?) {
+    private fun warnInfo(tag: String?, msg: String?) {
         if (!jetpackMvvmLog || TextUtils.isEmpty(msg)) {
             return
         }
@@ -41,10 +41,10 @@ object LogUtils {
      * 这里使用自己分节的方式来输出足够长度的 message
      *
      * @param tag 标签
-     * @param msg 日志内容
+     * @param msgParam 日志内容
      */
-    fun debugLongInfo(tag: String?, msg: String) {
-        var msg = msg
+    private fun debugLongInfo(tag: String?, msgParam: String) {
+        var msg = msgParam
         if (!jetpackMvvmLog || TextUtils.isEmpty(msg)) {
             return
         }
