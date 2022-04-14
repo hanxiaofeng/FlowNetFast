@@ -1,5 +1,4 @@
 # FlowNetFast
-develop library
 
 <p align="center"><img src="https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fhbimg.huabanimg.com%2Fc8c0c98749dadff0a55f0dda33433f2bde7040fe12c4e-1GDsbS_fw658&refer=http%3A%2F%2Fhbimg.huabanimg.com&app=2002&size=f9999,10000&q=a80&n=0&g=0n&fmt=auto?sec=1652497061&t=ce7f9f0622ca3361d9cdc68cd731663f" width="300"/>
 
@@ -18,10 +17,12 @@ develop library
 - Kotlin协程
 - DSL作用域编程
 - mvvm
-
+- 网络请求封装
+- loading处理
 <br>
 
 ## 安装
+
 ```groovy
 repositories {
     mavenCentral()
@@ -32,6 +33,41 @@ module 的 build.gradle 添加依赖：
 
 ```groovy
 implementation 'io.github.hanxiaofeng:flownet:1.0.0'
+```
+
+## 使用
+
+#### 1.基于Activity、fragment使用方式
+
+```
+① 创建requestViewModel继承自BaseViewModel
+class RequestMainViewModel: BaseViewModel() {
+
+    var websiteResult : MutableLiveData<ResultState<UsuallyWebSites>> = MutableLiveData()
+
+    fun postWebSiteRequest(){
+        request({ apiService.website()},websiteResult,true)
+    }
+
+}
+
+② 发起请求
+requestMainViewModel.postWebSiteRequest()
+
+③ 接收响应
+
+requestMainViewModel.websiteResult.observe(this) {
+    //todo something
+}
+
+```
+
+#### 2.全局请求（不依赖Activity、fragment）
+
+```
+requestGlobal({ apiService.website()},{
+    //todo something
+}, showLoading = true)
 ```
 
 ## License
