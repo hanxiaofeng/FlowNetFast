@@ -29,10 +29,6 @@ class MainActivity : BaseActivity<RequestMainViewModel, ActivityMainBinding>(),
 
     private val requestMainViewModel: RequestMainViewModel by viewModels()
 
-    override fun layoutId(): Int {
-        return R.layout.activity_main
-    }
-
     override fun initView(savedInstanceState: Bundle?) {
 
     }

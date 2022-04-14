@@ -7,6 +7,7 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import net.flow.jetpackmvvm.base.viewmodel.BaseViewModel
 import net.flow.jetpackmvvm.ext.getVmClazz
+import net.flow.jetpackmvvm.ext.util.notNull
 import net.flow.jetpackmvvm.network.manager.NetState
 import net.flow.jetpackmvvm.network.manager.NetworkStateManager
 
@@ -14,11 +15,6 @@ import net.flow.jetpackmvvm.network.manager.NetworkStateManager
  * 描述　: ViewModelActivity基类，把ViewModel注入进来了
  */
 abstract class BaseVmActivity<VM : BaseViewModel> : AppCompatActivity() {
-
-    /**
-     * 是否需要使用DataBinding 供子类BaseVmDbActivity修改，用户请慎动
-     */
-    private var isUserDb = false
 
     private var isFullScreen = false
 
@@ -42,11 +38,11 @@ abstract class BaseVmActivity<VM : BaseViewModel> : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         onCreateBefore()
         super.onCreate(savedInstanceState)
-        if (!isUserDb) {
+        initDataBind().notNull({
+            setContentView(it)
+        },{
             setContentView(layoutId())
-        } else {
-            initDataBind()
-        }
+        })
         init(savedInstanceState)
         onClick()
     }
@@ -116,10 +112,6 @@ abstract class BaseVmActivity<VM : BaseViewModel> : AppCompatActivity() {
         }
     }
 
-    fun userDataBinding(isUserDb: Boolean) {
-        this.isUserDb = isUserDb
-    }
-
     fun setFullScreen(isFullScreen: Boolean) {
         this.isFullScreen = isFullScreen
     }
@@ -131,5 +123,7 @@ abstract class BaseVmActivity<VM : BaseViewModel> : AppCompatActivity() {
     /**
      * 供子类BaseVmDbActivity 初始化Databinding操作
      */
-    open fun initDataBind() {}
+    open fun initDataBind():View? {
+        return null
+    }
 }

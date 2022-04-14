@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import androidx.databinding.DataBindingUtil
 import androidx.databinding.ViewDataBinding
 import net.flow.jetpackmvvm.base.viewmodel.BaseViewModel
+import net.flow.jetpackmvvm.ext.inflateBindingWithGeneric
 import net.flow.jetpackmvvm.util.dismissLoadingExt
 import net.flow.jetpackmvvm.util.showLoadingExt
 
@@ -16,8 +17,11 @@ import net.flow.jetpackmvvm.util.showLoadingExt
  */
 abstract class BaseVmDbFragment<VM : BaseViewModel, DB : ViewDataBinding> : BaseVmFragment<VM>() {
 
+    override fun layoutId() = 0
+
     //该类绑定的ViewDataBinding
-    lateinit var mDatabind: DB
+    private var _binding: DB? = null
+    val mDatabind: DB get() = _binding!!
 
     override fun showLoading(custom: Boolean, message: String) {
         if(!custom){
@@ -36,9 +40,12 @@ abstract class BaseVmDbFragment<VM : BaseViewModel, DB : ViewDataBinding> : Base
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        mDatabind = DataBindingUtil.inflate(inflater, layoutId(), container, false)
-        mDatabind.lifecycleOwner = this
+        _binding  = inflateBindingWithGeneric(inflater,container,false)
         return mDatabind.root
     }
 
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
 }

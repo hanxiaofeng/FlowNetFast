@@ -1,8 +1,7 @@
-# FlowNetFast
 
 <p align="center"><img src="https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fhbimg.huabanimg.com%2Fc8c0c98749dadff0a55f0dda33433f2bde7040fe12c4e-1GDsbS_fw658&refer=http%3A%2F%2Fhbimg.huabanimg.com&app=2002&size=f9999,10000&q=a80&n=0&g=0n&fmt=auto?sec=1652497061&t=ce7f9f0622ca3361d9cdc68cd731663f" width="300"/>
 
-<p align="center"><strong>基于kotlin协程(flow)网络请求的库</strong></p>
+<p align="center"><strong>基于mvvm，kotlin协程(flow)基础开发库</strong></p>
 
 <p align="center">
 <img src="https://img.shields.io/badge/language-kotlin-orange.svg"/>
@@ -19,6 +18,7 @@
 - mvvm
 - 网络请求封装
 - loading处理
+- liveData数据处理
 <br>
 
 ## 安装
@@ -36,6 +36,8 @@ implementation 'io.github.hanxiaofeng:flownet:1.0.0'
 ```
 
 ## 使用
+
+#### 1.新建apiService
 
 #### 1.基于Activity、fragment使用方式
 

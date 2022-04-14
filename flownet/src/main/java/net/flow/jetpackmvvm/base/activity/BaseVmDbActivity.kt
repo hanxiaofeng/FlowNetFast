@@ -5,6 +5,7 @@ import android.view.View
 import androidx.databinding.DataBindingUtil
 import androidx.databinding.ViewDataBinding
 import net.flow.jetpackmvvm.base.viewmodel.BaseViewModel
+import net.flow.jetpackmvvm.ext.inflateBindingWithGeneric
 import net.flow.jetpackmvvm.util.dismissLoadingExt
 import net.flow.jetpackmvvm.util.showLoadingExt
 
@@ -14,12 +15,9 @@ import net.flow.jetpackmvvm.util.showLoadingExt
  */
 abstract class BaseVmDbActivity<VM : BaseViewModel, DB : ViewDataBinding> : BaseVmActivity<VM>() {
 
-    lateinit var mDatabind: DB
+    override fun layoutId() = 0
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        userDataBinding(true)
-        super.onCreate(savedInstanceState)
-    }
+    lateinit var mDatabind: DB
 
     override fun showLoading(custom: Boolean, message: String) {
         if(!custom){
@@ -36,8 +34,8 @@ abstract class BaseVmDbActivity<VM : BaseViewModel, DB : ViewDataBinding> : Base
     /**
      * 创建DataBinding
      */
-    override fun initDataBind() {
-        mDatabind = DataBindingUtil.setContentView(this, layoutId())
-        mDatabind.lifecycleOwner = this
+    override fun initDataBind():View? {
+        mDatabind = inflateBindingWithGeneric(layoutInflater)
+        return mDatabind.root
     }
 }

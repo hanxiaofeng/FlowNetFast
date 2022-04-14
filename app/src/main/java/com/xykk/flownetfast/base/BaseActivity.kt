@@ -8,10 +8,7 @@ import net.flow.jetpackmvvm.base.activity.BaseVmDbActivity
 import net.flow.jetpackmvvm.base.viewmodel.BaseViewModel
 
 abstract class BaseActivity<VM : BaseViewModel, DB : ViewDataBinding> : BaseVmDbActivity<VM, DB>() {
-    /**
-     * 当前Activity绑定的视图布局Id abstract修饰供子类实现
-     */
-    abstract override fun layoutId(): Int
+
     /**
      * 当前Activityc创建后调用的方法 abstract修饰供子类实现
      */
