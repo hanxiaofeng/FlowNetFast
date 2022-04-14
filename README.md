@@ -32,7 +32,7 @@ repositories {
 module 的 build.gradle 添加依赖：
 
 ```groovy
-implementation 'io.github.hanxiaofeng:flownet:1.0.0'
+implementation 'io.github.hanxiaofeng:flownet:1.0.1'
 ```
 
 ## 使用
@@ -70,6 +70,17 @@ requestMainViewModel.websiteResult.observe(this) {
 requestGlobal({ apiService.website()},{
     //todo something
 }, showLoading = true)
+```
+
+## 运行demo
+
+直接clone项目到本地，然后项目根目录创建gradle.properties文件，并添加如下内容即可：
+
+```
+org.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8
+android.useAndroidX=true
+android.enableJetifier=true
+kotlin.code.style=official
 ```
 
 ## License
