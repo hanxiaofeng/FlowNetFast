@@ -17,4 +17,5 @@ interface ApiService {
      */
     @GET("friend/json")
     suspend fun website(): ApiResponse<UsuallyWebSites>
+
 }

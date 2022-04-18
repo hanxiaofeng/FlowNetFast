@@ -3,18 +3,19 @@ package net.flow.jetpackmvvm.ext.lifecycle
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.OnLifecycleEvent
-import net.flow.jetpackmvvm.callback.livedata.BooleanLiveData
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 
 /**
  * 描述　:
  */
 object KtxAppLifeObserver : LifecycleObserver {
 
-    var isForeground = BooleanLiveData()
+    var isForeground = MutableStateFlow<Boolean>(false)
 
     //在前台
     @OnLifecycleEvent(Lifecycle.Event.ON_START)
-    private  fun onForeground() {
+    private fun onForeground() {
         isForeground.value = true
     }
 

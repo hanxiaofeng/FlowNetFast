@@ -1,10 +1,15 @@
 package com.xykk.flownetfast.viewmodel.request
 
-import androidx.lifecycle.MutableLiveData
 import com.xykk.flownetfast.model.UsuallyWebSites
+import com.xykk.flownetfast.network.ApiResponse
 import com.xykk.flownetfast.network.apiService
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import net.flow.jetpackmvvm.base.viewmodel.BaseViewModel
 import net.flow.jetpackmvvm.ext.request
+import net.flow.jetpackmvvm.ext.requestNoCheck
+import net.flow.jetpackmvvm.ext.util.loge
 import net.flow.jetpackmvvm.state.ResultState
 
 /**
@@ -12,10 +17,27 @@ import net.flow.jetpackmvvm.state.ResultState
  */
 class RequestMainViewModel: BaseViewModel() {
 
-    var websiteResult : MutableLiveData<ResultState<UsuallyWebSites>> = MutableLiveData()
+    private val _websiteResult = MutableStateFlow<ResultState<UsuallyWebSites>>(ResultState.onEmpty())
+    val websiteResult:StateFlow<ResultState<UsuallyWebSites>> = _websiteResult
 
-    fun postWebSiteRequest(){
-        request({ apiService.website()},websiteResult,true)
+
+    private val _websiteResultNoCheck = MutableStateFlow<ResultState<ApiResponse<UsuallyWebSites>>>(ResultState.onEmpty())
+    val websiteResultNoCheck:StateFlow<ResultState<ApiResponse<UsuallyWebSites>>> = _websiteResultNoCheck
+
+
+    fun postWebSiteRequest(scope: CoroutineScope){
+        request(scope,{ apiService.website()},_websiteResult,true)
     }
 
+    fun postWebSiteRequestNoCheck(scope: CoroutineScope){
+        requestNoCheck(scope,{ apiService.website()},_websiteResultNoCheck,true)
+    }
+
+    fun postWebSiteRequestOther(scope: CoroutineScope){
+        request(scope,{ apiService.website()},{
+            it.toString().loge()
+        },{
+            it.message?.loge()
+        },true,"")
+    }
 }
