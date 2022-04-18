@@ -239,13 +239,11 @@ fun <T> BaseViewModel.request(
             block()
         }.flowOn(Dispatchers.IO)
             .onEach {
-                "sssssss: " + Thread.currentThread().name.loge("wangkeke")
                 if (isShowDialog) loadingChange.dismissDialog.emit(false)
                 executeResponse(it) { t ->
                     success(t)
                 }
             }.catch {
-                "sssssss: " + Thread.currentThread().name.loge("wangkeke")
                 if (isShowDialog) loadingChange.dismissDialog.emit(false)
                 it.message?.loge()
                 error(ExceptionHandle.handleException(it))

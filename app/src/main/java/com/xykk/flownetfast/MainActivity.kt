@@ -48,7 +48,6 @@ class MainActivity : BaseActivity<RequestMainViewModel, ActivityMainBinding>(),
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED){
                 requestMainViewModel.websiteResult.collect {
-                    "Main: "+Thread.currentThread().name.loge("wangkeke")
                     parseState(it,{ websites ->
                         websites.toString().loge()
                         mDatabind.tvData.text = websites.toString()
