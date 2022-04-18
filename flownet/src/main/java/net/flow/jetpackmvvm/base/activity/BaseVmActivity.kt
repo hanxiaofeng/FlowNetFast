@@ -3,10 +3,19 @@ package net.flow.jetpackmvvm.base.activity
 import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
 import net.flow.jetpackmvvm.base.viewmodel.BaseViewModel
 import net.flow.jetpackmvvm.ext.getVmClazz
+import net.flow.jetpackmvvm.ext.launchWithScope
+import net.flow.jetpackmvvm.ext.util.loge
 import net.flow.jetpackmvvm.ext.util.notNull
 import net.flow.jetpackmvvm.network.manager.NetState
 import net.flow.jetpackmvvm.network.manager.NetworkStateManager
@@ -40,7 +49,7 @@ abstract class BaseVmActivity<VM : BaseViewModel> : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         initDataBind().notNull({
             setContentView(it)
-        },{
+        }, {
             setContentView(layoutId())
         })
         init(savedInstanceState)
@@ -59,9 +68,14 @@ abstract class BaseVmActivity<VM : BaseViewModel> : AppCompatActivity() {
         registerUiChange()
         initView(savedInstanceState)
         createObserver()
-        NetworkStateManager.instance.mNetworkStateCallback.observe(this, Observer {
-            onNetworkStateChanged(it)
-        })
+
+        lifecycleScope.launch {
+            NetworkStateManager.instance.mNetworkStateCallback.collect {
+                it?.let {
+                    onNetworkStateChanged(it)
+                }
+            }
+        }
     }
 
     /**
@@ -85,30 +99,38 @@ abstract class BaseVmActivity<VM : BaseViewModel> : AppCompatActivity() {
      * 注册UI 事件
      */
     private fun registerUiChange() {
-        //显示弹窗
-        mViewModel.loadingChange.showDialog.observe(this, Observer {
-            showLoading(message = it)
-        })
-        //关闭弹窗
-        mViewModel.loadingChange.dismissDialog.observe(this, Observer {
-            dismissLoading()
-        })
+        launchWithScope {
+            //显示弹窗
+            mViewModel.loadingChange.showDialog.collect {
+                showLoading()
+            }
+        }
+        launchWithScope {
+            //隐藏弹窗
+            mViewModel.loadingChange.dismissDialog.collect {
+                dismissLoading()
+            }
+        }
     }
 
     /**
      * 将非该Activity绑定的ViewModel添加 loading回调 防止出现请求时不显示 loading 弹窗bug
      * @param viewModels Array<out BaseViewModel>
      */
-    protected fun addLoadingObserve(vararg viewModels: BaseViewModel){
-        viewModels.forEach {viewModel ->
-            //显示弹窗
-            viewModel.loadingChange.showDialog.observe(this, Observer {
-                showLoading(message = it)
-            })
-            //关闭弹窗
-            viewModel.loadingChange.dismissDialog.observe(this, Observer {
-                dismissLoading()
-            })
+    protected fun addLoadingObserve(vararg viewModels: BaseViewModel) {
+        viewModels.forEach { viewModel ->
+            launchWithScope {
+                //显示弹窗
+                viewModel.loadingChange.showDialog.collect {
+                    showLoading()
+                }
+            }
+            launchWithScope {
+                //隐藏弹窗
+                viewModel.loadingChange.dismissDialog.collect {
+                    dismissLoading()
+                }
+            }
         }
     }
 
@@ -116,14 +138,14 @@ abstract class BaseVmActivity<VM : BaseViewModel> : AppCompatActivity() {
         this.isFullScreen = isFullScreen
     }
 
-    fun isFullScreen():Boolean{
+    fun isFullScreen(): Boolean {
         return isFullScreen
     }
 
     /**
      * 供子类BaseVmDbActivity 初始化Databinding操作
      */
-    open fun initDataBind():View? {
+    open fun initDataBind(): View? {
         return null
     }
 }

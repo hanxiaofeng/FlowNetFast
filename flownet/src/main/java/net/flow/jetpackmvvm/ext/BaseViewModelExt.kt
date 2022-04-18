@@ -1,11 +1,12 @@
 package net.flow.jetpackmvvm.ext
 
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.*
 import net.flow.jetpackmvvm.base.activity.BaseVmActivity
 import net.flow.jetpackmvvm.base.fragment.BaseVmFragment
 import net.flow.jetpackmvvm.base.viewmodel.BaseViewModel
+import net.flow.jetpackmvvm.ext.util.getFlow
 import net.flow.jetpackmvvm.ext.util.loge
 import net.flow.jetpackmvvm.network.AppException
 import net.flow.jetpackmvvm.network.BaseResponse
@@ -17,8 +18,8 @@ import net.flow.jetpackmvvm.util.dismissLoadingExt
 import net.flow.jetpackmvvm.util.showLoadingExt
 
 /**
- * 描述　:BaseViewModel请求协程封装
  * 显示页面状态，这里有个技巧，成功回调在第一个，其后两个带默认值的回调可省
+ * 注意：解析接口一定要使用这个方法，因为stateflow有默认值，未发送请求之前collect就会触发，需要单独处理下
  * @param resultState 接口返回值
  * @param onLoading 加载中
  * @param onSuccess 成功回调
@@ -110,7 +111,8 @@ fun <T> BaseVmFragment<*>.parseState(
 
 
 /**
- * 全局的request，不依赖activity，请在非ui页面特殊情况下使用
+ * 全局的request，不依赖activity，请在非ui页面特殊情况下使用，不到万不得已不建议使用
+ * 注意：记得在需要退出协程任务的时候主动退出
  * @param block 请求体方法
  * @param success 请求成功的回调
  * @param error 请求失败的回调
@@ -122,36 +124,31 @@ fun <T> requestGlobal(
     showLoading: Boolean = false
 ): Job {
     return GlobalScope.launch {
-        runCatching {
-            withContext(Dispatchers.Main){
-                if(showLoading){
-                    showLoadingExt()
-                }
-            }
-            block()
-        }.onSuccess {
-            if(showLoading){
-                dismissLoadingExt()
-            }
-            runCatching{
-                //切换到主线程，校验请求结果码是否正确，不正确会抛出异常走下面的onFailure
-                withContext(Dispatchers.Main){
-                    executeResponse(it) { t ->
-                        success(t)
-                    }
-                }
-            }.onFailure { e ->
-                e.printStackTrace()
-                error(ExceptionHandle.handleException(e))
-            }
-        }.onFailure {
-            if(showLoading){
-                dismissLoadingExt()
-            }
-            it.printStackTrace()
-            //失败回调
-            error(ExceptionHandle.handleException(it))
+        withContext(Dispatchers.Main) {
+            if (showLoading) showLoadingExt()
         }
+        getFlow {
+            block()
+        }
+            .flowOn(Dispatchers.IO)
+            .onEach {
+                if (showLoading) {
+                    dismissLoadingExt()
+                }
+                executeResponse(it) { t ->
+                    success(t)
+                }
+            }.catch {
+                if (showLoading) {
+                    dismissLoadingExt()
+                }
+                it.printStackTrace()
+                //失败回调
+                error(ExceptionHandle.handleException(it))
+
+            }.flowOn(Dispatchers.Main)
+            .launchIn(this)
+            .start()
     }
 }
 
@@ -163,53 +160,58 @@ fun <T> requestGlobal(
  * @param loadingMessage 加载框提示内容
  */
 fun <T> BaseViewModel.request(
+    scope: CoroutineScope,
     block: suspend () -> BaseResponse<T>,
-    resultState: MutableLiveData<ResultState<T>>,
+    resultState: MutableStateFlow<ResultState<T>>,
     isShowDialog: Boolean = false,
     loadingMessage: String = "加载中···"
 ): Job {
     return viewModelScope.launch {
-        runCatching {
-            if (isShowDialog) loadingChange.showDialog.postValue(loadingMessage)
-            //请求体
+        if (isShowDialog) loadingChange.showDialog.emit(loadingMessage)
+        //.flowOn(Dispatchers.IO)
+        getFlow {
             block()
-        }.onSuccess {
-            if (isShowDialog) loadingChange.dismissDialog.postValue(false)
-            resultState.paresResult(it)
-        }.onFailure {
-            if (isShowDialog) loadingChange.dismissDialog.postValue(false)
-            it.message?.loge()
-            resultState.paresException(it)
-        }
+        }.flowOn(Dispatchers.IO)
+            .onEach {
+                if (isShowDialog) loadingChange.dismissDialog.emit(false)
+                resultState.paresResult(it.getResponseData())
+            }.catch {
+                if (isShowDialog) loadingChange.dismissDialog.emit(false)
+                it.message?.loge()
+                resultState.paresException(it)
+            }.launchIn(scope)
+            .start()
     }
 }
 
 /**
- * net request 不校验请求结果数据是否是成功
+ * net request 不校验请求结果数据是否是成功,拿到原始数据
  * @param block 请求体方法
  * @param resultState 请求回调的ResultState数据
  * @param isShowDialog 是否显示加载框
  * @param loadingMessage 加载框提示内容
  */
 fun <T> BaseViewModel.requestNoCheck(
+    scope: CoroutineScope,
     block: suspend () -> T,
-    resultState: MutableLiveData<ResultState<T>>,
+    resultState: MutableStateFlow<ResultState<T>>,
     isShowDialog: Boolean = false,
     loadingMessage: String = "加载中···"
 ): Job {
     return viewModelScope.launch {
-        runCatching {
-            if (isShowDialog) loadingChange.showDialog.postValue(loadingMessage)
-            //请求体
+        if (isShowDialog) loadingChange.showDialog.emit(loadingMessage)
+        getFlow {
             block()
-        }.onSuccess {
-            if (isShowDialog) loadingChange.dismissDialog.postValue(false)
-            resultState.paresResult(it)
-        }.onFailure {
-            if (isShowDialog) loadingChange.dismissDialog.postValue(false)
-            it.message?.loge()
-            resultState.paresException(it)
-        }
+        }.flowOn(Dispatchers.IO)
+            .onEach {
+                if (isShowDialog) loadingChange.dismissDialog.emit(false)
+                resultState.paresResult(it)
+            }.catch {
+                if (isShowDialog) loadingChange.dismissDialog.emit(false)
+                it.message?.loge()
+                resultState.paresException(it)
+            }.launchIn(scope)
+            .start()
     }
 }
 
@@ -222,40 +224,32 @@ fun <T> BaseViewModel.requestNoCheck(
  * @param loadingMessage 加载框提示内容
  */
 fun <T> BaseViewModel.request(
+    scope: CoroutineScope,
     block: suspend () -> BaseResponse<T>,
     success: (T) -> Unit,
     error: (AppException) -> Unit = {},
     isShowDialog: Boolean = false,
     loadingMessage: String = "加载中···"
 ): Job {
-    //如果需要弹窗 通知Activity/fragment弹窗
     return viewModelScope.launch {
-        runCatching {
-            if (isShowDialog) loadingChange.showDialog.postValue(loadingMessage)
-            //请求体
+        switchMain(scope) {
+            if (isShowDialog) loadingChange.showDialog.emit(loadingMessage)
+        }
+        getFlow {
             block()
-        }.onSuccess {
-            //网络请求成功 关闭弹窗
-            loadingChange.dismissDialog.postValue(false)
-            runCatching {
-                //校验请求结果码是否正确，不正确会抛出异常走下面的onFailure
+        }.flowOn(Dispatchers.IO)
+            .onEach {
+                if (isShowDialog) loadingChange.dismissDialog.emit(false)
                 executeResponse(it) { t ->
                     success(t)
                 }
-            }.onFailure { e ->
-                //打印错误消息
-                e.message?.loge()
-                //失败回调
-                error(ExceptionHandle.handleException(e))
-            }
-        }.onFailure {
-            //网络请求异常 关闭弹窗
-            loadingChange.dismissDialog.postValue(false)
-            //打印错误消息
-            it.message?.loge()
-            //失败回调
-            error(ExceptionHandle.handleException(it))
-        }
+            }.catch {
+                if (isShowDialog) loadingChange.dismissDialog.emit(false)
+                it.message?.loge()
+                error(ExceptionHandle.handleException(it))
+            }.flowOn(Dispatchers.Main)
+            .launchIn(scope)
+            .start()
     }
 }
 
@@ -268,32 +262,28 @@ fun <T> BaseViewModel.request(
  * @param loadingMessage 加载框提示内容
  */
 fun <T> BaseViewModel.requestNoCheck(
+    scope: CoroutineScope,
     block: suspend () -> T,
     success: (T) -> Unit,
     error: (AppException) -> Unit = {},
     isShowDialog: Boolean = false,
     loadingMessage: String = "加载中···"
 ): Job {
-    //如果需要弹窗 通知Activity/fragment弹窗
-    if (isShowDialog) loadingChange.showDialog.postValue(loadingMessage)
     return viewModelScope.launch {
-        runCatching {
-            //请求体
+        if (isShowDialog) loadingChange.showDialog.emit(loadingMessage)
+        getFlow {
             block()
-        }.onSuccess {
-            //网络请求成功 关闭弹窗
-            loadingChange.dismissDialog.postValue(false)
-            //成功回调
-            success(it)
-        }.onFailure {
-            //网络请求异常 关闭弹窗
-            loadingChange.dismissDialog.postValue(false)
-            //打印错误消息
-            it.message?.loge()
-            //失败回调
-            error(ExceptionHandle.handleException(it))
+        }.flowOn(Dispatchers.IO)
+            .onEach {
+                if (isShowDialog) loadingChange.dismissDialog.emit(false)
+                success(it)
+            }.catch {
+                if (isShowDialog) loadingChange.dismissDialog.emit(false)
+                it.message?.loge()
+                error(ExceptionHandle.handleException(it))
+            }.launchIn(scope)
+            .start()
         }
-    }
 }
 
 /**
@@ -339,6 +329,16 @@ fun <T> BaseViewModel.launch(
             success(it)
         }.onFailure {
             error(it)
+        }
+    }
+}
+
+fun <T> switchMain(scope: CoroutineScope, block: suspend () -> T) {
+    scope.launch {
+        runCatching {
+            withContext(Dispatchers.IO) {
+                block()
+            }
         }
     }
 }
