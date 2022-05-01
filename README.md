@@ -32,7 +32,7 @@ repositories {
 module 的 build.gradle 添加依赖：
 
 ```groovy
-implementation 'io.github.hanxiaofeng:flownet-flow:1.0.2'
+implementation 'io.github.hanxiaofeng:flownet-flow:1.0.3'
 ```
 
 ## 使用
