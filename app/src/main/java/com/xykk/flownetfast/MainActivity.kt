@@ -38,8 +38,7 @@ import java.io.File
  *@author wangkeke
  *@date 2022/4/12 4:20 下午
  */
-class MainActivity : BaseActivity<RequestMainViewModel, ActivityMainBinding>(),
-    CoroutineScope by MainScope() {
+class MainActivity : BaseActivity<RequestMainViewModel, ActivityMainBinding>(){
 
     private var postJob:Job? = null
 
@@ -88,17 +87,17 @@ class MainActivity : BaseActivity<RequestMainViewModel, ActivityMainBinding>(),
     override fun onClick() {
         mDatabind.btnPostNet.setOnClickListener {
             //测试普通请求
-            requestMainViewModel.postWebSiteRequest(lifecycleScope)
+//            requestMainViewModel.postWebSiteRequest()
 //            requestMainViewModel.postWebSiteRequestNoCheck(lifecycleScope)
 //            requestMainViewModel.postWebSiteRequestOther(lifecycleScope)
             //测试全局请求
-//            postJob = requestGlobal({ apiService.website()},{
-//                mDatabind.tvData.text = it.toString()
-//            }, showLoading = true)
+            requestGlobal({ apiService.website()},{
+                mDatabind.tvData.text = it.toString()
+            }, showLoading = true)
         }
 
         mDatabind.btnDownload.setOnClickListener {
-            launch {
+            lifecycleScope.launch {
                 withContext(Dispatchers.IO){
                     download()
                 }
@@ -139,6 +138,5 @@ class MainActivity : BaseActivity<RequestMainViewModel, ActivityMainBinding>(),
 
     override fun onDestroy() {
         super.onDestroy()
-//        postJob?.cancel()
     }
 }

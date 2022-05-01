@@ -1,6 +1,8 @@
 package net.flow.jetpackmvvm.ext
 
+import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.viewModelScope
+import com.blankj.utilcode.util.ActivityUtils
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import net.flow.jetpackmvvm.base.activity.BaseVmActivity
@@ -112,7 +114,7 @@ fun <T> BaseVmFragment<*>.parseState(
 
 /**
  * 全局的request，不依赖activity，请在非ui页面特殊情况下使用，不到万不得已不建议使用
- * 注意：记得在需要退出协程任务的时候主动退出
+ * 注意：请求不会跟随生命周期自动取消
  * @param block 请求体方法
  * @param success 请求成功的回调
  * @param error 请求失败的回调
@@ -123,7 +125,8 @@ fun <T> requestGlobal(
     error: (AppException) -> Unit = {},
     showLoading: Boolean = false
 ): Job {
-    return GlobalScope.launch {
+    return MainScope().launch {
+        Thread.currentThread().name.loge("glob")
         withContext(Dispatchers.Main) {
             if (showLoading) showLoadingExt()
         }
@@ -147,6 +150,11 @@ fun <T> requestGlobal(
                 error(ExceptionHandle.handleException(it))
 
             }.flowOn(Dispatchers.Main)
+            .onCompletion {
+                currentCoroutineContext().isActive.toString().loge("bf-wkk")
+                currentCoroutineContext().cancel()
+                currentCoroutineContext().isActive.toString().loge("af-wkk")
+            }
             .launchIn(this)
             .start()
     }
@@ -160,7 +168,6 @@ fun <T> requestGlobal(
  * @param loadingMessage 加载框提示内容
  */
 fun <T> BaseViewModel.request(
-    scope: CoroutineScope,
     block: suspend () -> BaseResponse<T>,
     resultState: MutableStateFlow<ResultState<T>>,
     isShowDialog: Boolean = false,
@@ -179,7 +186,7 @@ fun <T> BaseViewModel.request(
                 if (isShowDialog) loadingChange.dismissDialog.emit(false)
                 it.message?.loge()
                 resultState.paresException(it)
-            }.launchIn(scope)
+            }.launchIn(this)
             .start()
     }
 }
@@ -192,7 +199,6 @@ fun <T> BaseViewModel.request(
  * @param loadingMessage 加载框提示内容
  */
 fun <T> BaseViewModel.requestNoCheck(
-    scope: CoroutineScope,
     block: suspend () -> T,
     resultState: MutableStateFlow<ResultState<T>>,
     isShowDialog: Boolean = false,
@@ -210,7 +216,7 @@ fun <T> BaseViewModel.requestNoCheck(
                 if (isShowDialog) loadingChange.dismissDialog.emit(false)
                 it.message?.loge()
                 resultState.paresException(it)
-            }.launchIn(scope)
+            }.launchIn(this)
             .start()
     }
 }
@@ -224,7 +230,6 @@ fun <T> BaseViewModel.requestNoCheck(
  * @param loadingMessage 加载框提示内容
  */
 fun <T> BaseViewModel.request(
-    scope: CoroutineScope,
     block: suspend () -> BaseResponse<T>,
     success: (T) -> Unit,
     error: (AppException) -> Unit = {},
@@ -232,7 +237,7 @@ fun <T> BaseViewModel.request(
     loadingMessage: String = "加载中···"
 ): Job {
     return viewModelScope.launch {
-        switchMain(scope) {
+        switchMain {
             if (isShowDialog) loadingChange.showDialog.emit(loadingMessage)
         }
         getFlow {
@@ -248,7 +253,7 @@ fun <T> BaseViewModel.request(
                 it.message?.loge()
                 error(ExceptionHandle.handleException(it))
             }.flowOn(Dispatchers.Main)
-            .launchIn(scope)
+            .launchIn(this)
             .start()
     }
 }
@@ -262,7 +267,6 @@ fun <T> BaseViewModel.request(
  * @param loadingMessage 加载框提示内容
  */
 fun <T> BaseViewModel.requestNoCheck(
-    scope: CoroutineScope,
     block: suspend () -> T,
     success: (T) -> Unit,
     error: (AppException) -> Unit = {},
@@ -281,7 +285,7 @@ fun <T> BaseViewModel.requestNoCheck(
                 if (isShowDialog) loadingChange.dismissDialog.emit(false)
                 it.message?.loge()
                 error(ExceptionHandle.handleException(it))
-            }.launchIn(scope)
+            }.launchIn(this)
             .start()
         }
 }
@@ -333,8 +337,8 @@ fun <T> BaseViewModel.launch(
     }
 }
 
-fun <T> switchMain(scope: CoroutineScope, block: suspend () -> T) {
-    scope.launch {
+fun <T> BaseViewModel.switchMain(block: suspend () -> T) {
+    viewModelScope.launch {
         runCatching {
             withContext(Dispatchers.IO) {
                 block()

@@ -49,13 +49,13 @@ class RequestMainViewModel: BaseViewModel() {
     val websiteResult:StateFlow<ResultState<UsuallyWebSites>> = _websiteResult
 
     fun postWebSiteRequest(){
-         request(scope,{ apiService.website()},_websiteResult,true)
+         request({ apiService.website()},_websiteResult,true)
     }
 
 }
 
 ② 发起请求
-requestMainViewModel.postWebSiteRequest(lifecycleScope)
+requestMainViewModel.postWebSiteRequest()
 
 ③ 接收响应
 lifecycleScope.launch {

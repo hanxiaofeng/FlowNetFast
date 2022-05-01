@@ -25,16 +25,16 @@ class RequestMainViewModel: BaseViewModel() {
     val websiteResultNoCheck:StateFlow<ResultState<ApiResponse<UsuallyWebSites>>> = _websiteResultNoCheck
 
 
-    fun postWebSiteRequest(scope: CoroutineScope){
-        request(scope,{ apiService.website()},_websiteResult,true)
+    fun postWebSiteRequest(){
+        request({ apiService.website()},_websiteResult,true)
     }
 
     fun postWebSiteRequestNoCheck(scope: CoroutineScope){
-        requestNoCheck(scope,{ apiService.website()},_websiteResultNoCheck,true)
+        requestNoCheck({ apiService.website()},_websiteResultNoCheck,true)
     }
 
     fun postWebSiteRequestOther(scope: CoroutineScope){
-        request(scope,{ apiService.website()},{
+        request({ apiService.website()},{
             it.toString().loge()
         },{
             it.message?.loge()
