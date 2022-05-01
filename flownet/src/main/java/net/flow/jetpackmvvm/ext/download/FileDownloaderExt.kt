@@ -5,7 +5,6 @@ import androidx.lifecycle.MutableLiveData
 /**
  *
  */
-
 fun downLoadExt(downloadResultState: MutableLiveData<DownloadResultState>): OnDownLoadListener {
     return object : OnDownLoadListener {
         override fun onDownLoadPrepare(key: String) {

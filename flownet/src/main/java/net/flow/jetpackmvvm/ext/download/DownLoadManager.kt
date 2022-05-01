@@ -1,15 +1,18 @@
 package net.flow.jetpackmvvm.ext.download
 
+import android.content.Context
+import android.media.MediaScannerConnection
 import android.os.Looper
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.withContext
+import android.util.Log
+import com.blankj.utilcode.util.FileUtils
+import kotlinx.coroutines.*
 import net.flow.jetpackmvvm.ext.util.logi
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import java.io.File
 import java.util.concurrent.TimeUnit
+import kotlin.coroutines.coroutineContext
+import kotlin.coroutines.suspendCoroutine
 
 /**
  */
@@ -37,6 +40,7 @@ object DownLoadManager {
      */
     suspend fun downLoad(
         tag: String,
+        context: Context,
         url: String,
         savePath: String,
         saveName: String,
@@ -44,7 +48,18 @@ object DownLoadManager {
         loadListener: OnDownLoadListener
     ) {
         withContext(Dispatchers.IO) {
+            refreshMediaStore(context,savePath)
             doDownLoad(tag, url, savePath, saveName, reDownload, loadListener, this)
+        }
+    }
+
+    private suspend fun refreshMediaStore(context: Context, savePath: String) = suspendCoroutine<Boolean>{
+        val file = File(savePath)
+        MediaScannerConnection.scanFile(context, arrayOf<String>(file.toString()), null
+        ) { path, uri ->
+            Log.i("ExternalStorage", "Scanned $path:")
+            Log.i("ExternalStorage", "-> uri=$uri")
+            it.resumeWith(Result.success(true))
         }
     }
 
