@@ -18,7 +18,7 @@
 - mvvm
 - 网络请求封装
 - loading处理
-- liveData数据处理
+- flow数据处理
 <br>
 
 ## 安装
