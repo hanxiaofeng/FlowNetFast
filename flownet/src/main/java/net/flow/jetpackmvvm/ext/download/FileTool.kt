@@ -3,6 +3,7 @@ package net.flow.jetpackmvvm.ext.download
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import net.flow.jetpackmvvm.base.appContext
+import net.flow.jetpackmvvm.ext.util.loge
 import okhttp3.ResponseBody
 import java.io.File
 import java.io.RandomAccessFile
@@ -77,7 +78,9 @@ object FileTool {
         val fileLength =
             getFileLength(currentLength, responseBody)
         val inputStream = responseBody.byteStream()
-        val accessFile = RandomAccessFile(File(filePath), "rwd")
+        val file = File(filePath)
+        file.exists().toString().loge("download")
+        val accessFile = RandomAccessFile(file, "rwd")
         val channel = accessFile.channel
         val mappedBuffer = channel.map(
             FileChannel.MapMode.READ_WRITE,
