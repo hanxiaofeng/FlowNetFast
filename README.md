@@ -32,7 +32,7 @@ repositories {
 module 的 build.gradle 添加依赖：
 
 ```groovy
-implementation 'io.github.hanxiaofeng:flownet:1.0.1'
+implementation 'io.github.hanxiaofeng:flownet-flow:1.0.2'
 ```
 
 ## 使用
@@ -45,21 +45,29 @@ implementation 'io.github.hanxiaofeng:flownet:1.0.1'
 ① 创建requestViewModel继承自BaseViewModel
 class RequestMainViewModel: BaseViewModel() {
 
-    var websiteResult : MutableLiveData<ResultState<UsuallyWebSites>> = MutableLiveData()
+    private val _websiteResult = MutableStateFlow<ResultState<UsuallyWebSites>>(ResultState.onEmpty())
+    val websiteResult:StateFlow<ResultState<UsuallyWebSites>> = _websiteResult
 
     fun postWebSiteRequest(){
-        request({ apiService.website()},websiteResult,true)
+         request(scope,{ apiService.website()},_websiteResult,true)
     }
 
 }
 
 ② 发起请求
-requestMainViewModel.postWebSiteRequest()
+requestMainViewModel.postWebSiteRequest(lifecycleScope)
 
 ③ 接收响应
-
-requestMainViewModel.websiteResult.observe(this) {
-    //todo something
+lifecycleScope.launch {
+    repeatOnLifecycle(Lifecycle.State.STARTED){
+        requestMainViewModel.websiteResult.collect {
+            parseState(it,{ websites ->
+                websites.toString().loge()
+            },{ error ->
+                error.message?.loge()
+            })
+        }
+    }
 }
 
 ```
