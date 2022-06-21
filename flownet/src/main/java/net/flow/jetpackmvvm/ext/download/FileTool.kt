@@ -100,7 +100,8 @@ object FileTool {
             if (lastProgress != progress) {
                 lastProgress = progress
                 //记录已经下载的长度
-                ShareDownLoadUtil.putLong(key, currentSaveLength)
+                "key: $key ----- currentSaveLength : $currentSaveLength".loge("download")
+                putLong(key, currentSaveLength.toLong())
                 withContext(Dispatchers.Main) {
                     loadListener.onUpdate(
                         key,
@@ -115,7 +116,7 @@ object FileTool {
                     withContext(Dispatchers.Main) {
                         loadListener.onDownLoadSuccess(key, filePath,fileLength)
                     }
-                    DownLoadPool.remove(key)
+//                    DownLoadPool.remove(key)
                 }
             }
         }

@@ -8,6 +8,7 @@ import android.database.Cursor
 import android.net.ConnectivityManager
 import android.net.Uri
 import androidx.lifecycle.ProcessLifecycleOwner
+import com.tencent.mmkv.MMKV
 import net.flow.jetpackmvvm.ext.lifecycle.KtxAppLifeObserver
 import net.flow.jetpackmvvm.ext.lifecycle.KtxLifeCycleCallBack
 import net.flow.jetpackmvvm.network.manager.NetworkStateReceive
@@ -36,6 +37,7 @@ class Ktx : ContentProvider() {
     }
 
     private fun install(application: Application) {
+        MMKV.initialize(application)
         app = application
         mNetworkStateReceive = NetworkStateReceive()
         app.registerReceiver(

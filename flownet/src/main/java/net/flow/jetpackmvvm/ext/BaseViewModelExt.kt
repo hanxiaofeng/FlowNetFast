@@ -126,10 +126,7 @@ fun <T> requestGlobal(
     showLoading: Boolean = false
 ): Job {
     return MainScope().launch {
-        Thread.currentThread().name.loge("glob")
-        withContext(Dispatchers.Main) {
-            if (showLoading) showLoadingExt()
-        }
+        if (showLoading) showLoadingExt()
         getFlow {
             block()
         }
