@@ -4,6 +4,9 @@ import android.app.Application
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.ViewModelStoreOwner
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 
 /**
  * 描述　: 在Activity/fragment中获取Application级别的ViewModel
@@ -17,6 +20,8 @@ open class BaseApp : Application(), ViewModelStoreOwner {
     private lateinit var mAppViewModelStore: ViewModelStore
 
     private var mFactory: ViewModelProvider.Factory? = null
+
+    val applicationScope = CoroutineScope(SupervisorJob()+Dispatchers.Default)
 
     override fun getViewModelStore(): ViewModelStore {
         return mAppViewModelStore

@@ -112,7 +112,7 @@ object FileTool {
                     withContext(Dispatchers.Main) {
                         loadListener.onDownLoadSuccess(key, filePath,fileLength)
                     }
-                    DownLoadPool.remove(key)
+//                    DownLoadPool.remove(key)
                 }
             }
         }

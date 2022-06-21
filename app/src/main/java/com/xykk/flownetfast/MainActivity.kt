@@ -1,5 +1,6 @@
 package com.xykk.flownetfast
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.viewModels
@@ -14,6 +15,8 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flow
+import net.flow.jetpackmvvm.ext.download.DownLoadManager
+import net.flow.jetpackmvvm.ext.download.OnDownLoadListener
 import net.flow.jetpackmvvm.ext.request
 import net.flow.jetpackmvvm.ext.requestGlobal
 import net.flow.jetpackmvvm.ext.util.loge
@@ -24,8 +27,9 @@ import net.flow.jetpackmvvm.state.ResultState
  *@author wangkeke
  *@date 2022/4/12 4:20 下午
  */
-class MainActivity : BaseActivity<RequestMainViewModel, ActivityMainBinding>(),
-    CoroutineScope by MainScope() {
+class MainActivity : BaseActivity<RequestMainViewModel, ActivityMainBinding>() {
+
+    private var job:Job? = null
 
     private val requestMainViewModel: RequestMainViewModel by viewModels()
 
@@ -94,13 +98,44 @@ class MainActivity : BaseActivity<RequestMainViewModel, ActivityMainBinding>(),
 
     override fun onClick() {
         mDatabind.btnPostNet.setOnClickListener {
-            //测试普通请求
-            requestMainViewModel.postWebSiteRequest()
-            //测试全局请求
-//            requestGlobal({ apiService.website()},{
-//                mDatabind.tvData.text = it.toString()
-//            }, showLoading = true)
+            startActivity(Intent(this@MainActivity,NetRequestActivity::class.java))
+        }
+
+        mDatabind.btnDownload.setOnClickListener {
+            MyApp.instance.applicationScope.launch {
+                DownLoadManager.downLoad("appTag","https://cos.pgyer.com/ddb78822cdf6745da4d681ac0a275425.apk?sign=f91acfd78e5304ff3300f4c6db261427&t=1655797656&response-content-disposition=attachment%3Bfilename%3D%E7%99%BE%E5%BA%A6%E8%BE%93%E5%85%A5%E6%B3%95%E5%8D%8E%E4%B8%BA%E7%89%88_8.2.8.111.apk",cacheDir!!.absolutePath,"test.apk",reDownload = false,object: OnDownLoadListener{
+                    override fun onDownLoadPrepare(key: String) {
+                        "onDownLoadPrepare key: $key".loge()
+                    }
+
+                    override fun onDownLoadError(key: String, throwable: Throwable) {
+                        "onDownLoadError key: $key throwable: ${throwable.message}".loge()
+                    }
+
+                    override fun onDownLoadSuccess(key: String, path: String, size: Long) {
+                        "onDownLoadSuccess key: $key path: $path size: $size".loge()
+                    }
+
+                    override fun onDownLoadPause(key: String) {
+                        "onDownLoadPause key: $key".loge()
+                    }
+
+                    override fun onUpdate(
+                        key: String,
+                        progress: Int,
+                        read: Long,
+                        count: Long,
+                        done: Boolean
+                    ) {
+                        "onUpdate key: $key progress: $progress".loge()
+                    }
+                })
+            }
         }
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        job?.cancel()
+    }
 }

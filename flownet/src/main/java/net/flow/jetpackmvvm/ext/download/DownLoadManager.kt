@@ -127,6 +127,13 @@ object DownLoadManager {
             return
         }
 
+        if (url.isEmpty()) {
+            withContext(Dispatchers.Main) {
+                loadListener.onDownLoadError(tag, Throwable("download url is Empty"))
+            }
+            return
+        }
+
         if (Looper.getMainLooper().thread == Thread.currentThread()) {
             withContext(Dispatchers.Main) {
                 loadListener.onDownLoadError(tag, Throwable("current thread is in main thread"))
@@ -135,7 +142,7 @@ object DownLoadManager {
         }
 
         val file = File("$savePath/$saveName")
-        val currentLength = if (!file.exists()) {
+        val currentLength = if (reDownload || !file.exists()) {
             0L
         } else {
             ShareDownLoadUtil.getLong(tag, 0)

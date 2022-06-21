@@ -110,7 +110,7 @@ fun <T> BaseVmFragment<*>.parseState(
 
 
 /**
- * 全局的request，不依赖activity，请在非ui页面特殊情况下使用
+ * 全局的request，不依赖activity，请在非ui页面特殊情况下使用，请在合适的时机cancel掉job
  * @param block 请求体方法
  * @param success 请求成功的回调
  * @param error 请求失败的回调
@@ -121,25 +121,26 @@ fun <T> requestGlobal(
     error: (AppException) -> Unit = {},
     showLoading: Boolean = false
 ): Job {
-    return GlobalScope.launch {
+    return MainScope().launch {
         runCatching {
-            withContext(Dispatchers.Main){
-                if(showLoading){
-                    showLoadingExt()
-                }
+            if(showLoading){
+                showLoadingExt()
             }
-            block()
+            "thread: ${Thread.currentThread().name}".loge()
+            withContext(Dispatchers.IO){
+                block()
+            }
         }.onSuccess {
             if(showLoading){
                 dismissLoadingExt()
             }
             runCatching{
                 //切换到主线程，校验请求结果码是否正确，不正确会抛出异常走下面的onFailure
-                withContext(Dispatchers.Main){
+//                withContext(Dispatchers.Main){
                     executeResponse(it) { t ->
                         success(t)
                     }
-                }
+//                }
             }.onFailure { e ->
                 e.printStackTrace()
                 error(ExceptionHandle.handleException(e))
