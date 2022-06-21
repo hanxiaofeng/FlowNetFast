@@ -40,7 +40,7 @@ object DownLoadPool {
         scopeMap.remove(key)
         listenerHashMap.remove(key)
         pathMap.remove(key)
-        ShareDownLoadUtil.remove(key)
+        removeKey(key)
     }
 
 

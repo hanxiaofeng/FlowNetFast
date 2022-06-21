@@ -3,59 +3,54 @@ package net.flow.jetpackmvvm.ext.download
 import android.content.Context
 import android.content.SharedPreferences
 import android.os.Build
+import android.os.Process
+import android.util.Log
+import com.tencent.mmkv.MMKV
 import net.flow.jetpackmvvm.base.appContext
+import net.flow.jetpackmvvm.ext.util.loge
 
 /**
  */
-object ShareDownLoadUtil {
 
-    private var path = Build.BRAND + "_" + Build.MODEL + "_" + "download_sp"
-    private val sp: SharedPreferences = appContext.getSharedPreferences(path, Context.MODE_PRIVATE)
-
-
-    fun setPath(path: String) {
-        ShareDownLoadUtil.path = path
-    }
+    val mmkv = MMKV.defaultMMKV()
 
     fun putBoolean(key: String, value: Boolean) {
-        sp.edit().putBoolean(key, value).apply()
+        mmkv.encode(key,value)
     }
 
     fun getBoolean(key: String, defValue: Boolean): Boolean {
-        return sp.getBoolean(key, defValue)
+        return mmkv.decodeBool(key,defValue)
     }
 
     fun putString(key: String, value: String) {
-        sp.edit().putString(key, value).apply()
+        mmkv.encode(key,value)
     }
 
     fun getString(key: String, defValue: String): String? {
-        return sp.getString(key, defValue)
+        return mmkv.decodeString(key, defValue)
     }
 
     fun putInt(key: String, value: Int) {
-        sp.edit().putInt(key, value).apply()
+        mmkv.encode(key,value)
     }
 
     fun getInt(key: String, defValue: Int): Int {
-        return sp.getInt(key, defValue)
+        return mmkv.decodeInt(key, defValue)
     }
 
-    fun putLong(key: String?, value: Long) {
-        sp.edit().putLong(key, value).apply()
+    fun putLong(key: String, value: Long):Boolean {
+        return mmkv.encode(key,value)
     }
 
     fun getLong(key: String, defValue: Long): Long {
-        return sp.getLong(key, defValue)
+        return  mmkv.decodeLong(key,defValue)
     }
 
-    fun remove(key: String) {
-        sp.edit().remove(key).apply()
+    fun removeKey(key: String) {
+        "removeKey:$key".loge()
+        mmkv.removeValueForKey(key)
     }
 
     fun clear() {
-        sp.edit().clear().apply()
+        mmkv.clearAll()
     }
-
-
-}

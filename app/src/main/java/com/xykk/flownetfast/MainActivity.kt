@@ -10,7 +10,9 @@ import androidx.activity.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import com.blankj.utilcode.util.AppUtils
 import com.blankj.utilcode.util.ToastUtils
+import com.tencent.mmkv.MMKV
 import com.xykk.flownetfast.base.BaseActivity
 import com.xykk.flownetfast.databinding.ActivityMainBinding
 import com.xykk.flownetfast.model.UsuallyWebSites
@@ -21,9 +23,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flow
-import net.flow.jetpackmvvm.ext.download.DownLoadManager
-import net.flow.jetpackmvvm.ext.download.OnDownLoadListener
-import net.flow.jetpackmvvm.ext.download.downLoadExt
+import net.flow.jetpackmvvm.ext.download.*
 import net.flow.jetpackmvvm.ext.parseState
 import net.flow.jetpackmvvm.ext.request
 import net.flow.jetpackmvvm.ext.requestGlobal
@@ -39,8 +39,6 @@ import java.io.File
  *@date 2022/4/12 4:20 下午
  */
 class MainActivity : BaseActivity<RequestMainViewModel, ActivityMainBinding>(){
-
-    private var postJob:Job? = null
 
     private val requestMainViewModel: RequestMainViewModel by viewModels()
 
@@ -97,16 +95,24 @@ class MainActivity : BaseActivity<RequestMainViewModel, ActivityMainBinding>(){
         }
 
         mDatabind.btnDownload.setOnClickListener {
-            lifecycleScope.launch {
+            MainScope().launch {
+                download()
+            }
+
+        }
+
+        mDatabind.btnTest.setOnClickListener {
+            MainScope().launch {
                 withContext(Dispatchers.IO){
-                    download()
+                    val result = getLong("testApp", 0L)
+                    "获取当前key的值：${result}".loge()
                 }
             }
         }
     }
 
     private suspend fun download() {
-        DownLoadManager.downLoad("app",this,"https://b7804be5a071519a58e18b7b947061cb.rdt.tfogc.com:49156/imtt.dd.qq.com/sjy.10001/16891/apk/DCEBC567E14F1F22830246522767CB1F.apk?mkey=626dc69809ddbed17c1b0cfc8f928780&arrive_key=735430190809&fsname=com.dl.schedule_2.0.2_7.apk&csr=3554&cip=223.104.150.117&proto=https","sdcard/Download/apk","testDownload.apk",reDownload = true, loadListener = object:OnDownLoadListener{
+        DownLoadManager.downLoad("testApp",this,"http://qn.yingyonghui.com/apk/6962162/b498008b341a29d64dd7ac6f461bc771?sign=59cd2ec8f8da1e39db92e83ea1fab33c&t=62b12c72&attname=b498008b341a29d64dd7ac6f461bc771.apk",cacheDir!!.absolutePath,"testDownload.apk",reDownload = true, loadListener = object:OnDownLoadListener{
             override fun onDownLoadPrepare(key: String) {
                 key.loge("download")
             }
@@ -118,9 +124,14 @@ class MainActivity : BaseActivity<RequestMainViewModel, ActivityMainBinding>(){
             override fun onDownLoadSuccess(key: String, path: String, size: Long) {
                 "$key --- $path --- $size".loge("download")
                 ToastUtils.showLong("下载成功")
+//                AppUtils.installApp(File(path))
+                runOnUiThread {
+                    mDatabind.tvData.text = "下载完成！"
+                }
             }
 
             override fun onDownLoadPause(key: String) {
+                "$key----pause".loge("download")
             }
 
             override fun onUpdate(
@@ -131,6 +142,9 @@ class MainActivity : BaseActivity<RequestMainViewModel, ActivityMainBinding>(){
                 done: Boolean
             ) {
                 "$key --- progress = $progress --- done: $done".loge("download")
+                runOnUiThread {
+                    mDatabind.tvData.text = "当前下载进度：$progress%"
+                }
             }
 
         })

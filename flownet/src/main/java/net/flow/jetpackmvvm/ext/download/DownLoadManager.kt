@@ -5,7 +5,9 @@ import android.media.MediaScannerConnection
 import android.os.Looper
 import android.util.Log
 import com.blankj.utilcode.util.FileUtils
+import com.blankj.utilcode.util.PermissionUtils
 import kotlinx.coroutines.*
+import net.flow.jetpackmvvm.ext.util.loge
 import net.flow.jetpackmvvm.ext.util.logi
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
@@ -45,7 +47,7 @@ object DownLoadManager {
         savePath: String,
         saveName: String,
         reDownload: Boolean = false,
-        loadListener: OnDownLoadListener
+        loadListener: OnDownLoadListener,
     ) {
         withContext(Dispatchers.IO) {
             refreshMediaStore(context,savePath)
@@ -150,13 +152,16 @@ object DownLoadManager {
         }
 
         val file = File("$savePath/$saveName")
-        val currentLength = if (!file.exists()) {
+        val currentLength = if (reDownload || !file.exists()) {
             0L
         } else {
-            ShareDownLoadUtil.getLong(tag, 0)
+            "获取long值thead：${Thread.currentThread().name}".loge("download")
+            getLong(tag, 0L)
         }
-        if (file.exists()&&currentLength == 0L && !reDownload) {
-            //文件已存在了
+        "file.length : ${file.length()} ---- file.exists(): ${file.exists()} ----- currentLength : $currentLength".loge("download")
+
+        if (file.exists()&&currentLength == file.length() && !reDownload) {
+            //文件已下载完成
             loadListener.onDownLoadSuccess(tag, file.path, file.length())
             return
         }
