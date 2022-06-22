@@ -95,10 +95,9 @@ class MainActivity : BaseActivity<RequestMainViewModel, ActivityMainBinding>(){
         }
 
         mDatabind.btnDownload.setOnClickListener {
-            MainScope().launch {
+            MyApp.instance().applicationScope.launch {
                 download()
             }
-
         }
 
         mDatabind.btnTest.setOnClickListener {
@@ -112,7 +111,7 @@ class MainActivity : BaseActivity<RequestMainViewModel, ActivityMainBinding>(){
     }
 
     private suspend fun download() {
-        DownLoadManager.downLoad("testApp",this,"http://qn.yingyonghui.com/apk/6962162/b498008b341a29d64dd7ac6f461bc771?sign=59cd2ec8f8da1e39db92e83ea1fab33c&t=62b12c72&attname=b498008b341a29d64dd7ac6f461bc771.apk",cacheDir!!.absolutePath,"testDownload.apk",reDownload = true, loadListener = object:OnDownLoadListener{
+        DownLoadManager.downLoad("testApp",this,"https://cos.pgyer.com/6ce2b1e072ca2a306fbe3d1061de0764.apk?sign=cc01e4b318326e365ee993fab725e506&t=1655867098&response-content-disposition=attachment%3Bfilename%3DFlowNetFast_1.1.apk",cacheDir!!.absolutePath,"testDownload.apk",reDownload = true, loadListener = object:OnDownLoadListener{
             override fun onDownLoadPrepare(key: String) {
                 key.loge("download")
             }
